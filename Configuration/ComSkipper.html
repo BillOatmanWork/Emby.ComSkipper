@@ -1,0 +1,36 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Commercial Skipper</title>
+</head>
+<body>
+	<div data-role="page" style="align-items: center; margin: auto;" class="type-interior pluginConfigurationPage ComSkipperConfigurationPage" data-require="emby-button,emby-input,emby-select,emby-toggle" data-controller="__plugin/ComSkipperConfigurationPageJS">
+		<div data-role="content">
+			<div class="content-primary">
+				<form class="comskipperForm">
+					<h3 style="margin: .6em 0; vertical-align: middle; display: inline-block;">
+						Commercial Skipper
+					</h3>
+					<div class="inputContainer">
+						<label style="width: auto;" class="mdl-switch mdl-js-switch">
+							<input is="emby-toggle" type="checkbox" id="autoSkipCommercials" class="chkautoSkipCommercials" data-embytoggle="">
+							<span class="toggleButtonLabel mdl-switch__label">Auto Skip Commercials</span>
+							<div class="mdl-switch__trackContainer">
+								<div class="mdl-switch__track"></div>
+								<div class="mdl-switch__thumb">
+									<span class="mdl-switch__focus-helper"></span>
+								</div>
+							</div>
+						</label>
+						<div class="fieldDescription">
+							Automatically skip commercials during recording playback if it has an EDL file created.
+						</div>
+					</div>
+					<div><b>This plugin is completely free.</b></div>
+					<div><b>If you find it of value and have the means, please consider donating to a local charity that benefits children.</b></div>
+				</form>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
