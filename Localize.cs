@@ -21,7 +21,8 @@ namespace ComSkipper
             new localEntry() { text = "commercial skipped", locale = "zh-cn", localizedText = "商业跳过" },
             new localEntry() { text = "commercial skipped", locale = "it-it", localizedText = "Commerciale saltato" },
             new localEntry() { text = "commercial skipped", locale = "en-IE", localizedText = "Scipeáil Tráchtála" },
-            new localEntry() { text = "commercial skipped", locale = "de-de", localizedText = "Werbung übersprungen" }
+            new localEntry() { text = "commercial skipped", locale = "de-de", localizedText = "Werbung übersprungen" },
+            new localEntry() { text = "commercial skipped", locale = "sv-se", localizedText = "Kommersiell överhoppad" }
         };
         #endregion Localization Data
 

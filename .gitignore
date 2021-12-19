@@ -5,3 +5,4 @@
 /.vs
 /bin/Release/netstandard2.0
 /obj
+/bin/Debug/netstandard2.0
