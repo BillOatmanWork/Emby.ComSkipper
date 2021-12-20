@@ -140,7 +140,9 @@ namespace ComSkipper
             {
                 found.skipped = true;
                 SkipCommercial(session, found.endTicks);
-                SendMessageToClient(session);
+
+                if (e.Session.Capabilities.SupportedCommands.Contains("DisplayMessage"))
+                    SendMessageToClient(session);
 
                 Log.Info("Skipping commercial. Session: " + session + " Start = " + found.startTicks.ToString() + "  End = " + found.endTicks.ToString());
             }
