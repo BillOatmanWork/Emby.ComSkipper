@@ -3,6 +3,7 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Plugins;
 using MediaBrowser.Controller.Session;
+using MediaBrowser.Model.Dto;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Session;
 using System;
@@ -16,6 +17,7 @@ namespace ComSkipper
     public class ServerEntryPoint : IServerEntryPoint
     {
         private List<EdlSequence> commercialList = new List<EdlSequence>();
+        private List<EdlTimestamp> timestamps = new List<EdlTimestamp>();
 
         private ISessionManager SessionManager { get; set; }
 
@@ -70,6 +72,86 @@ namespace ComSkipper
             string session = e.Session.Id;
             Log.Debug("Playback Session = " + session + " Path = " + filePath);
 
+            lock (timestamps)
+            {
+                EdlTimestamp ts = new EdlTimestamp();
+                ts.sessionId = session;
+                ts.timeLoaded = DateTimeOffset.Now.ToUnixTimeSeconds();
+                timestamps.Add(ts);
+            }
+
+            ReadEdlFile(e);
+        }
+
+        /// <summary>
+        /// Executed on a playback prorgrss Emby event. See if it is in a identified commercial and skip if it is.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void PlaybackProgress(object sender, PlaybackProgressEventArgs e)
+        {
+            if (Plugin.Instance.Configuration.EnableComSkipper == false)
+                return;
+
+            if (e.Session.PlayState.IsPaused || !e.PlaybackPositionTicks.HasValue)
+                return;
+
+            string session = e.Session.Id;
+
+            if (e.Item.IsActiveRecording() == true && Plugin.Instance.Configuration.RealTimeEnabled == true)
+            {
+                // Reload EDL info every minute
+                long ns = DateTimeOffset.Now.ToUnixTimeSeconds();
+                EdlTimestamp tsfound = timestamps.Find(x => x.sessionId == session);
+                if(tsfound != null)
+                {
+                    if ((ns - tsfound.timeLoaded) >= 60)
+                    {
+                        Log.Debug("Reloading EDL data for Session " + tsfound.sessionId);
+
+                        RemoveFromList(session);
+                        ReadEdlFile(e);
+                    }
+                }
+            }
+          
+            long playbackPositionTicks = e.PlaybackPositionTicks.Value;
+
+            EdlSequence found = commercialList.Find(x => x.sessionId == session && x.skipped == false && playbackPositionTicks >= x.startTicks && playbackPositionTicks < (x.endTicks - 1000));
+            if (found != null)
+            {
+                found.skipped = true;
+                SkipCommercial(session, found.endTicks);
+
+                if (e.Session.Capabilities.SupportedCommands.Contains("DisplayMessage"))
+                    SendMessageToClient(session);
+
+                Log.Info("Skipping commercial. Session: " + session + " Start = " + found.startTicks.ToString() + "  End = " + found.endTicks.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Executed on a playback stopped Emby event. Remove the commercialList entries for the session.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void PlaybackStopped(object sender, PlaybackStopEventArgs e)
+        {
+            if (Plugin.Instance.Configuration.EnableComSkipper == false)
+                return;
+
+            string name = e.MediaInfo.Name;
+            string sessionID = e.Session.Id;
+            Log.Debug("Playback Stopped. Session = " + sessionID + " Name = " + name);
+
+            RemoveFromList(sessionID);
+        }
+
+        private void ReadEdlFile(PlaybackProgressEventArgs e)
+        {
+            string filePath = e.MediaInfo.Path;
+            string session = e.Session.Id;
+
             // Check for edl file and load skip list if found
             // Seconds to ticks = seconds * TimeSpan.TicksPerSecond
             string edlFile = Path.ChangeExtension(filePath, ".edl");
@@ -119,53 +201,17 @@ namespace ComSkipper
             }
         }
 
-        /// <summary>
-        /// Executed on a playback prorgrss Emby event. See if it is in a identified commercial and skip if it is.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void PlaybackProgress(object sender, PlaybackProgressEventArgs e)
+        private void RemoveFromList(string sessionID)
         {
-            if (Plugin.Instance.Configuration.EnableComSkipper == false)
-                return;
-
-            if (e.Session.PlayState.IsPaused || !e.PlaybackPositionTicks.HasValue)
-                return;
-
-            string session = e.Session.Id;
-            long playbackPositionTicks = e.PlaybackPositionTicks.Value;
-
-            EdlSequence found = commercialList.Find(x => x.sessionId == session && x.skipped == false && playbackPositionTicks >= x.startTicks && playbackPositionTicks < (x.endTicks - 1000));
-            if (found != null)
-            {
-                found.skipped = true;
-                SkipCommercial(session, found.endTicks);
-
-                if (e.Session.Capabilities.SupportedCommands.Contains("DisplayMessage"))
-                    SendMessageToClient(session);
-
-                Log.Info("Skipping commercial. Session: " + session + " Start = " + found.startTicks.ToString() + "  End = " + found.endTicks.ToString());
-            }
-        }
-
-        /// <summary>
-        /// Executed on a playback stopped Emby event. Remove the commercialList entries for the session.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void PlaybackStopped(object sender, PlaybackStopEventArgs e)
-        {
-            if (Plugin.Instance.Configuration.EnableComSkipper == false)
-                return;
-
-            string name = e.MediaInfo.Name;
-            string sessionID = e.Session.Id;
-            Log.Debug("Playback Stopped. Session = " + sessionID + " Name = " + name);
-
             // Remove all items is skip list with this session ID
             lock (commercialList)
             {
                 commercialList.RemoveAll(x => x.sessionId == sessionID);
+            }
+
+            lock (timestamps)
+            {
+                timestamps.RemoveAll(x => x.sessionId == sessionID);
             }
         }
 
@@ -206,5 +252,14 @@ namespace ComSkipper
         public bool skipped { get; set; } = false;
         public long startTicks { get; set; }
         public long endTicks { get; set; }
+    }
+
+    /// <summary>
+    /// EDL timestamp
+    /// </summary>
+    public class EdlTimestamp
+    {
+        public long timeLoaded { get; set; }
+        public string sessionId { get; set; }
     }
 }

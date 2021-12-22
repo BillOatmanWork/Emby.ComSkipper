@@ -7,9 +7,11 @@
             view.addEventListener('viewshow',
                 async () => {
                     var chkEnableAutoSkip = view.querySelector('#autoSkipCommercials');
+                    var chkEnableRealtime = view.querySelector('#enableRealtime');
 
                     ApiClient.getPluginConfiguration(pluginId).then((config) => {
                         chkEnableAutoSkip.checked = config.EnableComSkipper ?? false;
+                        chkEnableRealtime.checked = config.RealTimeEnabled ?? false;
                     });
 
                     chkEnableAutoSkip.addEventListener('change', (elem) => {
@@ -18,10 +20,23 @@
                         enableAutoSkip(autoSkip);
                     });
 
+                    chkEnableRealtime.addEventListener('change', (elem) => {
+                        elem.preventDefault();
+                        var realTime = chkEnableRealtime.checked;
+                        enableRealTime(realTime);
+                    });
+
                     function enableAutoSkip(autoSkip) {
                         ApiClient.getPluginConfiguration(pluginId).then((config) => {
                             config.EnableComSkipper = autoSkip;
                             ApiClient.updatePluginConfiguration(pluginId, config).then(() => {});
+                        });
+                    }
+
+                    function enableRealTime(realTime) {
+                        ApiClient.getPluginConfiguration(pluginId).then((config) => {
+                            config.RealTimeEnabled = realTime;
+                            ApiClient.updatePluginConfiguration(pluginId, config).then(() => { });
                         });
                     }
                 });
