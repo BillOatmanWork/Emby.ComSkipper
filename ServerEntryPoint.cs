@@ -107,9 +107,9 @@ namespace ComSkipper
                 {
                     if ((ns - tsfound.timeLoaded) >= 60)
                     {
-                        Log.Debug("Reloading EDL data for Session " + tsfound.sessionId);
-
                         RemoveFromList(session);
+                        Log.Debug("Reloading EDL data for Session " + tsfound.sessionId);
+                     
                         ReadEdlFile(e);
                     }
                 }
