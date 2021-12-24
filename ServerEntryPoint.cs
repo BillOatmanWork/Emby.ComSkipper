@@ -72,13 +72,7 @@ namespace ComSkipper
             string session = e.Session.Id;
             Log.Debug("Playback Session = " + session + " Path = " + filePath);
 
-            lock (timestamps)
-            {
-                EdlTimestamp ts = new EdlTimestamp();
-                ts.sessionId = session;
-                ts.timeLoaded = DateTimeOffset.Now.ToUnixTimeSeconds();
-                timestamps.Add(ts);
-            }
+            AddTimestamp(session);
 
             ReadEdlFile(e);
         }
@@ -111,6 +105,8 @@ namespace ComSkipper
                         Log.Debug("Reloading EDL data for Session " + tsfound.sessionId);
                      
                         ReadEdlFile(e);
+
+                        AddTimestamp(session);
                     }
                 }
             }
@@ -203,15 +199,26 @@ namespace ComSkipper
 
         private void RemoveFromList(string sessionID)
         {
+            lock (timestamps)
+            {
+                timestamps.RemoveAll(x => x.sessionId == sessionID);
+            }
+
             // Remove all items is skip list with this session ID
             lock (commercialList)
             {
                 commercialList.RemoveAll(x => x.sessionId == sessionID);
             }
+        }
 
+        private void AddTimestamp(string sessionId)
+        {
             lock (timestamps)
             {
-                timestamps.RemoveAll(x => x.sessionId == sessionID);
+                EdlTimestamp ts = new EdlTimestamp();
+                ts.sessionId = sessionId;
+                ts.timeLoaded = DateTimeOffset.Now.ToUnixTimeSeconds();
+                timestamps.Add(ts);
             }
         }
 
