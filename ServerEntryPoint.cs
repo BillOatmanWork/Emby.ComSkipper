@@ -76,6 +76,12 @@ namespace ComSkipper
             if (!File.Exists(edlFile))
                 return;
 
+            // Remove any stragglers
+            lock (commercialList)
+            {
+                commercialList.RemoveAll(x => x.sessionId == session);
+            }
+
             Log.Debug("EDL file " + edlFile + " found.");
 
             List<EdlSequence> commTempList = new List<EdlSequence>();
@@ -141,7 +147,7 @@ namespace ComSkipper
                 found.skipped = true;
                 SkipCommercial(session, found.endTicks);
 
-                if (e.Session.Capabilities.SupportedCommands.Contains("DisplayMessage"))
+                if (Plugin.Instance.Configuration.DisableMessage == false && e.Session.Capabilities.SupportedCommands.Contains("DisplayMessage"))
                     SendMessageToClient(session);
 
                 Log.Info("Skipping commercial. Session: " + session + " Start = " + found.startTicks.ToString() + "  End = " + found.endTicks.ToString());
