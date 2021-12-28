@@ -7,11 +7,13 @@
             view.addEventListener('viewshow',
                 async () => {
                     var chkEnableAutoSkip = view.querySelector('#autoSkipCommercials');
+                    var chkEnableRealtime = view.querySelector('#enableRealtime');
                     var chkDisableMessage = view.querySelector('#disableMessage');
 
                     ApiClient.getPluginConfiguration(pluginId).then((config) => {
                         chkEnableAutoSkip.checked = config.EnableComSkipper ?? false;
                         chkDisableMessage.checked = config.DisableMessage ?? false;
+                        chkEnableRealtime.checked = config.RealTimeEnabled ?? false;
                     });
 
                     chkEnableAutoSkip.addEventListener('change', (elem) => {
@@ -26,6 +28,12 @@
                         enableDisableMessage(disMsg);
                     });
 
+                    chkEnableRealtime.addEventListener('change', (elem) => {
+                        elem.preventDefault();
+                        var realTime = chkEnableRealtime.checked;
+                        enableRealTime(realTime);
+                    });
+
                     function enableAutoSkip(autoSkip) {
                         ApiClient.getPluginConfiguration(pluginId).then((config) => {
                             config.EnableComSkipper = autoSkip;
@@ -36,6 +44,13 @@
                     function enableDisableMessage(disMsg) {
                         ApiClient.getPluginConfiguration(pluginId).then((config) => {
                             config.DisableMessage = disMsg;
+                            ApiClient.updatePluginConfiguration(pluginId, config).then(() => { });
+                        });
+                    }
+
+                    function enableRealTime(realTime) {
+                        ApiClient.getPluginConfiguration(pluginId).then((config) => {
+                            config.RealTimeEnabled = realTime;
                             ApiClient.updatePluginConfiguration(pluginId, config).then(() => { });
                         });
                     }

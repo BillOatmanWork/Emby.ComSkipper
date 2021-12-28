@@ -7,5 +7,7 @@ namespace ComSkipper.Configuration
         public bool EnableComSkipper { get; set; }
 
         public bool DisableMessage { get; set; }
+
+        public bool RealTimeEnabled { get; set; }       
     }
 }
