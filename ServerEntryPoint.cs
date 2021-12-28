@@ -119,7 +119,7 @@ namespace ComSkipper
                 found.skipped = true;
                 SkipCommercial(session, found.endTicks);
 
-                if (e.Session.Capabilities.SupportedCommands.Contains("DisplayMessage"))
+                if (Plugin.Instance.Configuration.DisableMessage == false && e.Session.Capabilities.SupportedCommands.Contains("DisplayMessage"))
                     SendMessageToClient(session);
 
                 Log.Info("Skipping commercial. Session: " + session + " Start = " + found.startTicks.ToString() + "  End = " + found.endTicks.ToString());
@@ -214,10 +214,6 @@ namespace ComSkipper
             lock (commercialList)
             {
                 commercialList.RemoveAll(x => x.sessionId == sessionID);
-                if (Plugin.Instance.Configuration.DisableMessage == false && e.Session.Capabilities.SupportedCommands.Contains("DisplayMessage"))
-                    SendMessageToClient(session);
-
-                Log.Info("Skipping commercial. Session: " + session + " Start = " + found.startTicks.ToString() + "  End = " + found.endTicks.ToString());
             }
         }
 
