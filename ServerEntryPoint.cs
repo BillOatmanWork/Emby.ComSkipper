@@ -72,6 +72,9 @@ namespace ComSkipper
             string session = e.Session.Id;
             Log.Debug("Playback Session = " + session + " Path = " + filePath);
 
+            // Remove any stragglers
+            RemoveFromList(session);
+
             AddTimestamp(session);
 
             ReadEdlFile(e);
