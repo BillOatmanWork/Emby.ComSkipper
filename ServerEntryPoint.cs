@@ -66,7 +66,10 @@ namespace ComSkipper
         private void PlaybackStart(object sender, PlaybackProgressEventArgs e)
         {
             if (Plugin.Instance.Configuration.EnableComSkipper == false)
+            {
+                Log.Debug("PlaybackStart: Plugin is disabled.");
                 return;
+            }
 
             string filePath = e.MediaInfo.Path;
             string session = e.Session.Id;
@@ -151,9 +154,12 @@ namespace ComSkipper
             string filePath = e.MediaInfo.Path;
             string session = e.Session.Id;
 
+            string edlFile = Path.ChangeExtension(filePath, ".edl");
+            Log.Debug("Media File: " + filePath + "   EDL file " + edlFile + " found.");
+
             // Check for edl file and load skip list if found
             // Seconds to ticks = seconds * TimeSpan.TicksPerSecond
-            string edlFile = Path.ChangeExtension(filePath, ".edl");
+            
             if (!File.Exists(edlFile))
                 return;
 
