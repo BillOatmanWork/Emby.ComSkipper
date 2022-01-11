@@ -77,14 +77,14 @@ namespace ComSkipper
 
             // Remove any stragglers
             RemoveFromList(session);
-
+            
             AddTimestamp(session);
 
             ReadEdlFile(e);
         }
 
         /// <summary>
-        /// Executed on a playback prorgrss Emby event. See if it is in a identified commercial and skip if it is.
+        /// Executed on a playback prorgress Emby event. See if it is in a identified commercial and skip if it is.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -98,6 +98,7 @@ namespace ComSkipper
 
             string session = e.Session.Id;
 
+            // This should allow for people who are watching as it is being recorded to skip commercials
             if (e.Item.IsActiveRecording() == true && Plugin.Instance.Configuration.RealTimeEnabled == true)
             {
                 // Reload EDL info every minute
@@ -128,7 +129,7 @@ namespace ComSkipper
                 if (Plugin.Instance.Configuration.DisableMessage == false && e.Session.Capabilities.SupportedCommands.Contains("DisplayMessage"))
                     SendMessageToClient(session);
 
-                Log.Info("Skipping commercial. Session: " + session + " Start = " + found.startTicks.ToString() + "  End = " + found.endTicks.ToString());
+                Log.Debug("Skipping commercial. Session: " + session + " Start = " + found.startTicks.ToString() + "  End = " + found.endTicks.ToString());
             }
         }
 
@@ -149,6 +150,10 @@ namespace ComSkipper
             RemoveFromList(sessionID);
         }
 
+        /// <summary>
+        /// Read and process the comskip EDL file
+        /// </summary>
+        /// <param name="e"></param>
         private void ReadEdlFile(PlaybackProgressEventArgs e)
         {
             string filePath = e.MediaInfo.Path;
@@ -161,7 +166,10 @@ namespace ComSkipper
             // Seconds to ticks = seconds * TimeSpan.TicksPerSecond
             
             if (!File.Exists(edlFile))
+            {
+                Log.Debug($"Comskip EDL file [{edlFile}] does not exist.");
                 return;
+            }
 
             // Remove any stragglers
             lock (commercialList)
@@ -169,7 +177,7 @@ namespace ComSkipper
                 commercialList.RemoveAll(x => x.sessionId == session);
             }
 
-            Log.Debug("EDL file " + edlFile + " found.");
+            Log.Debug($"EDL file {edlFile} found.");
 
             List<EdlSequence> commTempList = new List<EdlSequence>();
 
@@ -212,28 +220,43 @@ namespace ComSkipper
             }
         }
 
+        /// <summary>
+        /// Remove a session from various lists
+        /// </summary>
+        /// <param name="sessionID"></param>
         private void RemoveFromList(string sessionID)
         {
-            lock (timestamps)
+            if (Plugin.Instance.Configuration.RealTimeEnabled == true)
             {
-                timestamps.RemoveAll(x => x.sessionId == sessionID);
+                // Remove all items in timestamp list with this session ID
+                lock (timestamps)
+                {
+                    timestamps.RemoveAll(x => x.sessionId == sessionID);
+                }
             }
 
-            // Remove all items is skip list with this session ID
+            // Remove all items in skip list with this session ID
             lock (commercialList)
             {
                 commercialList.RemoveAll(x => x.sessionId == sessionID);
             }
         }
 
+        /// <summary>
+        /// Add timestamp to the list for a session
+        /// </summary>
+        /// <param name="sessionId"></param>
         private void AddTimestamp(string sessionId)
         {
-            lock (timestamps)
+            if (Plugin.Instance.Configuration.RealTimeEnabled == true)
             {
-                EdlTimestamp ts = new EdlTimestamp();
-                ts.sessionId = sessionId;
-                ts.timeLoaded = DateTimeOffset.Now.ToUnixTimeSeconds();
-                timestamps.Add(ts);
+                lock (timestamps)
+                {
+                    EdlTimestamp ts = new EdlTimestamp();
+                    ts.sessionId = sessionId;
+                    ts.timeLoaded = DateTimeOffset.Now.ToUnixTimeSeconds();
+                    timestamps.Add(ts);
+                }
             }
         }
 
