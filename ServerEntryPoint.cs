@@ -123,11 +123,21 @@ namespace ComSkipper
             EdlSequence found = commercialList.Find(x => x.sessionId == session && x.skipped == false && playbackPositionTicks >= x.startTicks && playbackPositionTicks < (x.endTicks - 1000));
             if (found != null)
             {
+                string controlSession = (e.Session.SupportsRemoteControl)
+                    ? e.Session.Id
+                    : SessionManager.Sessions.Where(i => i.DeviceId == e.Session.DeviceId && i.SupportsRemoteControl).FirstOrDefault().Id;
+
+                if(string.IsNullOrEmpty(controlSession))
+                {
+                    Log.Debug($"No control session for SessionID {e.Session.Id}");
+                    return;
+                }
+
                 found.skipped = true;
-                SkipCommercial(session, found.endTicks);
+                SkipCommercial(controlSession, found.endTicks);
 
                 if (Plugin.Instance.Configuration.DisableMessage == false && e.Session.Capabilities.SupportedCommands.Contains("DisplayMessage"))
-                    SendMessageToClient(session);
+                    SendMessageToClient(controlSession);
 
                 Log.Debug("Skipping commercial. Session: " + session + " Start = " + found.startTicks.ToString() + "  End = " + found.endTicks.ToString());
             }
