@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>1.2.1.0</Version>
+    <Version>1.2.2.0</Version>
     <AssemblyName>ComSkipper</AssemblyName>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/BillOatmanWork/Emby.ComSkipper</RepositoryUrl>
@@ -11,12 +11,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove=".gitignore" />
     <None Remove="Commercial Skipper Plugin.docx" />
     <None Remove="Commercial Skipper Plugin.pdf" />
     <None Remove="Configuration\ComSkipper.html" />
     <None Remove="Configuration\ComSkipper.js" />
+    <None Remove="LICENSE" />
     <None Remove="LICENSE.md" />
     <None Remove="logo.png" />
+    <None Remove="README.md" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,13 +31,6 @@
   <ItemGroup>
     <PackageReference Include="MediaBrowser.Server.Core" Version="4.6.0.50" />
     <PackageReference Include="System.Memory" Version="4.5.4" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="README.md">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
   </ItemGroup>
 
 </Project>

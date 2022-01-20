@@ -8,6 +8,7 @@ using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Session;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -47,6 +48,9 @@ namespace ComSkipper
 
         public void Run()
         {
+            // Set for correct parsing of the EDL file regardless of servers culture
+            CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
+
             // TODO: When Emby adds clients locale to the Session object, use that instead of the servers locale below.
             Locale = ConfigManager.Configuration.UICulture;
             Log.Debug("Locale = " + Locale);
