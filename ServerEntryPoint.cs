@@ -227,7 +227,7 @@ namespace ComSkipper
                 commercialList.AddRange(commTempList);
             }
 
-            Log.Debug("Commmercial List in seconds for " + e.MediaInfo.Name + ":");
+            Log.Debug("Commercial List in seconds for " + e.MediaInfo.Name + ":");
             foreach (EdlSequence s in commTempList)
             {
                 Log.Debug("Start: " + (s.startTicks / TimeSpan.TicksPerSecond).ToString() + "  End: " + (s.endTicks / TimeSpan.TicksPerSecond).ToString());
