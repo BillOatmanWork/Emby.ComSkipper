@@ -174,7 +174,7 @@ namespace ComSkipper
             string session = e.Session.Id;
 
             string edlFile = Path.ChangeExtension(filePath, ".edl");
-            Log.Debug("Media File: " + filePath + "   EDL file " + edlFile + " found.");
+            Log.Debug("Media File: " + filePath + "   EDL file " + edlFile);
 
             // Check for edl file and load skip list if found
             // Seconds to ticks = seconds * TimeSpan.TicksPerSecond
