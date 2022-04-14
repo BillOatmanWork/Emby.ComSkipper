@@ -294,11 +294,15 @@ namespace ComSkipper
         /// <param name="session"></param>
         private async void SendMessageToClient(string sessionID)
         {
-            MessageCommand messageCommand = new MessageCommand();
-            messageCommand.Header = String.Empty;
-            messageCommand.Text = Localize.localize("Commercial Skipped", Locale);
-            messageCommand.TimeoutMs = new long?(1000L);
-            await SessionManager.SendMessageCommand(sessionID, sessionID, messageCommand, CancellationToken.None);
+            try
+            {
+                MessageCommand messageCommand = new MessageCommand();
+                messageCommand.Header = String.Empty;
+                messageCommand.Text = Localize.localize("Commercial Skipped", Locale);
+                messageCommand.TimeoutMs = new long?(1000L);
+                await SessionManager.SendMessageCommand(sessionID, sessionID, messageCommand, CancellationToken.None);
+            }
+            catch { }
         }
     }
 
