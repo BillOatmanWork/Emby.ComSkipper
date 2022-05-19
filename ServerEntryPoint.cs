@@ -5,6 +5,7 @@ using MediaBrowser.Controller.Plugins;
 using MediaBrowser.Controller.Session;
 using MediaBrowser.Model.Dto;
 using MediaBrowser.Model.Logging;
+using MediaBrowser.Model.Querying;
 using MediaBrowser.Model.Session;
 using System;
 using System.Collections.Generic;
@@ -283,7 +284,13 @@ namespace ComSkipper
         {
             PlaystateRequest playstateRequest = new PlaystateRequest();
             playstateRequest.Command = PlaystateCommand.Seek;
-            playstateRequest.ControllingUserId = ((BaseItem)((IEnumerable<User>)this.UserManager.Users).FirstOrDefault<User>((Func<User, bool>)(u => u.Policy.IsAdministrator)))?.Id.ToString();
+
+            UserQuery userListQuery = new UserQuery();
+            userListQuery.IsAdministrator = true;
+            playstateRequest.ControllingUserId =  this.UserManager.GetUserList(userListQuery).FirstOrDefault().Id.ToString();
+
+         //   playstateRequest.ControllingUserId = ((BaseItem)((IEnumerable<User>)this.UserManager.Users).FirstOrDefault<User>((Func<User, bool>)(u => u.Policy.IsAdministrator)))?.Id.ToString();
+
             playstateRequest.SeekPositionTicks = new long?(seek);
             SessionManager.SendPlaystateCommand((string)null, sessionID, playstateRequest, CancellationToken.None);
         }
