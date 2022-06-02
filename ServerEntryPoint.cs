@@ -204,16 +204,20 @@ namespace ComSkipper
                     while ((line = reader.ReadLine()) != null)
                     {
                         string[] parts = line.Split('\t');
-                        Log.Debug("parts " + parts[0] + " " + parts[1]);
+                        Log.Debug("parts " + parts[0] + " " + parts[1] + " " + parts[2]);
 
-                        EdlSequence seq = new EdlSequence();
-                        seq.sessionId = session;
-                        seq.startTicks = (long)(double.Parse(parts[0]) * (double)TimeSpan.TicksPerSecond);
-                        if (seq.startTicks < TimeSpan.TicksPerSecond)
-                            seq.startTicks = TimeSpan.TicksPerSecond;
-                        seq.endTicks = (long)(double.Parse(parts[1]) * (double)TimeSpan.TicksPerSecond);
+                        // 1 indicates it is meant to mute audio, not skip
+                        if (parts[2] != "1")
+                        {
+                            EdlSequence seq = new EdlSequence();
+                            seq.sessionId = session;
+                            seq.startTicks = (long)(double.Parse(parts[0]) * (double)TimeSpan.TicksPerSecond);
+                            if (seq.startTicks < TimeSpan.TicksPerSecond)
+                                seq.startTicks = TimeSpan.TicksPerSecond;
+                            seq.endTicks = (long)(double.Parse(parts[1]) * (double)TimeSpan.TicksPerSecond);
 
-                        commTempList.Add(seq);
+                            commTempList.Add(seq);
+                        }
                     }
                 }
             }
