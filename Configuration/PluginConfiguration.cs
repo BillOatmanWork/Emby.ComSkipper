@@ -8,6 +8,8 @@ namespace ComSkipper.Configuration
 
         public bool DisableMessage { get; set; }
 
-        public bool RealTimeEnabled { get; set; }       
+        public bool RealTimeEnabled { get; set; }
+
+        public bool ShowTimeInMessage { get; set; }
     }
 }

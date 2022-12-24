@@ -142,7 +142,7 @@ namespace ComSkipper
                 SkipCommercial(controlSession, found.endTicks);
 
                 if (Plugin.Instance.Configuration.DisableMessage == false && e.Session.Capabilities.SupportedCommands.Contains("DisplayMessage"))
-                    SendMessageToClient(controlSession);
+                    SendMessageToClient(controlSession, ((found.endTicks - found.startTicks) / TimeSpan.TicksPerSecond).ToString());
 
                 Log.Info("Skipping commercial. Session: " + session + " Start = " + found.startTicks.ToString() + "  End = " + found.endTicks.ToString());
             }
@@ -300,13 +300,17 @@ namespace ComSkipper
         /// Send Commercial Skipped message to client
         /// </summary>
         /// <param name="session"></param>
-        private async void SendMessageToClient(string sessionID)
+        private async void SendMessageToClient(string sessionID, string duration)
         {
             try
             {
+                string message = "Commercial Skipped";
+                if (Plugin.Instance.Configuration.ShowTimeInMessage == true)
+                    message = message + " {" + duration + " seconds)";
+
                 MessageCommand messageCommand = new MessageCommand();
                 messageCommand.Header = String.Empty;
-                messageCommand.Text = Localize.localize("Commercial Skipped", Locale);
+                messageCommand.Text = Localize.localize(message, Locale);
                 messageCommand.TimeoutMs = new long?(1000L);
                 await SessionManager.SendMessageCommand(sessionID, sessionID, messageCommand, CancellationToken.None);
             }

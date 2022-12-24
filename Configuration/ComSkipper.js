@@ -9,11 +9,13 @@
                     var chkEnableAutoSkip = view.querySelector('#autoSkipCommercials');
                     var chkEnableRealtime = view.querySelector('#enableRealtime');
                     var chkDisableMessage = view.querySelector('#disableMessage');
+                    var chkShowTime = view.querySelector('#showTime');
 
                     ApiClient.getPluginConfiguration(pluginId).then((config) => {
                         chkEnableAutoSkip.checked = config.EnableComSkipper ?? false;
                         chkDisableMessage.checked = config.DisableMessage ?? false;
                         chkEnableRealtime.checked = config.RealTimeEnabled ?? false;
+                        chkShowTime.checked = config.ShowTimeInMessage ?? false;
                     });
 
                     chkEnableAutoSkip.addEventListener('change', (elem) => {
@@ -26,6 +28,12 @@
                         elem.preventDefault();
                         var disMsg = chkDisableMessage.checked;
                         enableDisableMessage(disMsg);
+                    });
+
+                    chkShowTime.addEventListener('change', (elem) => {
+                        elem.preventDefault();
+                        var showTime = chkShowTime.checked;
+                        enableShowTime(showTime);
                     });
 
                     chkEnableRealtime.addEventListener('change', (elem) => {
@@ -44,6 +52,13 @@
                     function enableDisableMessage(disMsg) {
                         ApiClient.getPluginConfiguration(pluginId).then((config) => {
                             config.DisableMessage = disMsg;
+                            ApiClient.updatePluginConfiguration(pluginId, config).then(() => { });
+                        });
+                    }
+
+                    function enableShowTime(showTime) {
+                        ApiClient.getPluginConfiguration(pluginId).then((config) => {
+                            config.ShowTimeInMessage = showTime;
                             ApiClient.updatePluginConfiguration(pluginId, config).then(() => { });
                         });
                     }
