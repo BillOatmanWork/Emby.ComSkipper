@@ -142,7 +142,7 @@ namespace ComSkipper
                 SkipCommercial(controlSession, found.endTicks);
 
                 if (Plugin.Instance.Configuration.DisableMessage == false && e.Session.Capabilities.SupportedCommands.Contains("DisplayMessage"))
-                    SendMessageToClient(controlSession, ((found.endTicks - found.startTicks) / TimeSpan.TicksPerSecond).ToString());
+                    SendMessageToClient(controlSession, (found.endTicks - found.startTicks) / TimeSpan.TicksPerSecond);
 
                 Log.Info("Skipping commercial. Session: " + session + " Start = " + found.startTicks.ToString() + "  End = " + found.endTicks.ToString());
             }
@@ -299,19 +299,23 @@ namespace ComSkipper
         /// <summary>
         /// Send Commercial Skipped message to client
         /// </summary>
-        /// <param name="session"></param>
-        private async void SendMessageToClient(string sessionID, string duration)
+        /// <param name="sessionID"></param>
+        /// <param name="duration"></param>
+        private async void SendMessageToClient(string sessionID, long duration)
         {
             try
             {
                 string message = "Commercial Skipped";
                 if (Plugin.Instance.Configuration.ShowTimeInMessage == true)
-                    message = message + " {" + duration + " seconds)";
+                {
+                    TimeSpan ts = TimeSpan.FromSeconds(duration);
+                    message = message + " (" + ts.Minutes.ToString() + ":" + ts.Seconds.ToString("00") + ")";
+                }
 
                 MessageCommand messageCommand = new MessageCommand();
                 messageCommand.Header = String.Empty;
                 messageCommand.Text = Localize.localize(message, Locale);
-                messageCommand.TimeoutMs = new long?(1000L);
+                messageCommand.TimeoutMs = new long?((long)(Plugin.Instance.Configuration.MessageDisplayTineSeconds * 1000));
                 await SessionManager.SendMessageCommand(sessionID, sessionID, messageCommand, CancellationToken.None);
             }
             catch { }

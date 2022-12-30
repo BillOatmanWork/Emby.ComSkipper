@@ -11,5 +11,7 @@ namespace ComSkipper.Configuration
         public bool RealTimeEnabled { get; set; }
 
         public bool ShowTimeInMessage { get; set; }
+
+        public int MessageDisplayTineSeconds { get; set; }
     }
 }

@@ -10,12 +10,14 @@
                     var chkEnableRealtime = view.querySelector('#enableRealtime');
                     var chkDisableMessage = view.querySelector('#disableMessage');
                     var chkShowTime = view.querySelector('#showTime');
+                    var messageDisplayTime = view.querySelector('#messageDisplayTime');
 
                     ApiClient.getPluginConfiguration(pluginId).then((config) => {
                         chkEnableAutoSkip.checked = config.EnableComSkipper ?? false;
                         chkDisableMessage.checked = config.DisableMessage ?? false;
                         chkEnableRealtime.checked = config.RealTimeEnabled ?? false;
                         chkShowTime.checked = config.ShowTimeInMessage ?? false;
+                        messageDisplayTime.value = config.MessageDisplayTineSeconds ? config.MessageDisplayTineSeconds : 1;
                     });
 
                     chkEnableAutoSkip.addEventListener('change', (elem) => {
@@ -42,6 +44,11 @@
                         enableRealTime(realTime);
                     });
 
+                    messageDisplayTime.addEventListener('change', (elem) => {
+                        elem.preventDefault();
+                        setMessageDisplayTime();
+                    });
+
                     function enableAutoSkip(autoSkip) {
                         ApiClient.getPluginConfiguration(pluginId).then((config) => {
                             config.EnableComSkipper = autoSkip;
@@ -66,6 +73,13 @@
                     function enableRealTime(realTime) {
                         ApiClient.getPluginConfiguration(pluginId).then((config) => {
                             config.RealTimeEnabled = realTime;
+                            ApiClient.updatePluginConfiguration(pluginId, config).then(() => { });
+                        });
+                    }
+
+                    function setMessageDisplayTime() {
+                        ApiClient.getPluginConfiguration(pluginId).then((config) => {
+                            config.MessageDisplayTineSeconds = messageDisplayTime.value;
                             ApiClient.updatePluginConfiguration(pluginId, config).then(() => { });
                         });
                     }
