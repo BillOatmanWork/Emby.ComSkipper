@@ -11,13 +11,15 @@
                     var chkDisableMessage = view.querySelector('#disableMessage');
                     var chkShowTime = view.querySelector('#showTime');
                     var messageDisplayTime = view.querySelector('#messageDisplayTime');
-
+                    var mainMessageText = view.querySelector('#mainMessageText');
+                    
                     ApiClient.getPluginConfiguration(pluginId).then((config) => {
                         chkEnableAutoSkip.checked = config.EnableComSkipper ?? false;
                         chkDisableMessage.checked = config.DisableMessage ?? false;
                         chkEnableRealtime.checked = config.RealTimeEnabled ?? false;
                         chkShowTime.checked = config.ShowTimeInMessage ?? false;
-                        messageDisplayTime.value = config.MessageDisplayTineSeconds ? config.MessageDisplayTineSeconds : 1;
+                        messageDisplayTime.value = config.MessageDisplayTimeSeconds ? config.MessageDisplayTimeSeconds : 1;
+                        mainMessageText.value = config.MainMessageText ? config.MainMessageText : "Commercial Skipped";
                     });
 
                     chkEnableAutoSkip.addEventListener('change', (elem) => {
@@ -47,6 +49,11 @@
                     messageDisplayTime.addEventListener('change', (elem) => {
                         elem.preventDefault();
                         setMessageDisplayTime();
+                    });
+
+                    mainMessageText.addEventListener('change', (elem) => {
+                        elem.preventDefault();
+                        setMainMessageText();
                     });
 
                     function enableAutoSkip(autoSkip) {
@@ -79,7 +86,14 @@
 
                     function setMessageDisplayTime() {
                         ApiClient.getPluginConfiguration(pluginId).then((config) => {
-                            config.MessageDisplayTineSeconds = messageDisplayTime.value;
+                            config.MessageDisplayTimeSeconds = messageDisplayTime.value;
+                            ApiClient.updatePluginConfiguration(pluginId, config).then(() => { });
+                        });
+                    }
+
+                    function setMainMessageText() {
+                        ApiClient.getPluginConfiguration(pluginId).then((config) => {
+                            config.MainMessageText = mainMessageText.value;
                             ApiClient.updatePluginConfiguration(pluginId, config).then(() => { });
                         });
                     }

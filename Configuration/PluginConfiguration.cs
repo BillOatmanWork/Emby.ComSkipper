@@ -4,14 +4,16 @@ namespace ComSkipper.Configuration
 {
     public class PluginConfiguration : BasePluginConfiguration
     {
-        public bool EnableComSkipper { get; set; }
+        public bool EnableComSkipper { get; set; } = true;
 
-        public bool DisableMessage { get; set; }
+        public bool DisableMessage { get; set; } = false;
 
-        public bool RealTimeEnabled { get; set; }
+        public bool RealTimeEnabled { get; set; } = false;
 
-        public bool ShowTimeInMessage { get; set; }
+        public bool ShowTimeInMessage { get; set; } = false;
 
-        public int MessageDisplayTineSeconds { get; set; }
+        public int MessageDisplayTimeSeconds { get; set; } = 1;
+
+        public string MainMessageText { get; set; } = "Commercial Skipped";
     }
 }

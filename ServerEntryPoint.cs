@@ -305,7 +305,7 @@ namespace ComSkipper
         {
             try
             {
-                string message = "Commercial Skipped";
+                string message = Plugin.Instance.Configuration.MainMessageText;
                 if (Plugin.Instance.Configuration.ShowTimeInMessage == true)
                 {
                     TimeSpan ts = TimeSpan.FromSeconds(duration);
@@ -315,7 +315,7 @@ namespace ComSkipper
                 MessageCommand messageCommand = new MessageCommand();
                 messageCommand.Header = String.Empty;
                 messageCommand.Text = Localize.localize(message, Locale);
-                messageCommand.TimeoutMs = new long?((long)(Plugin.Instance.Configuration.MessageDisplayTineSeconds * 1000));
+                messageCommand.TimeoutMs = new long?((long)(Plugin.Instance.Configuration.MessageDisplayTimeSeconds * 1000));
                 await SessionManager.SendMessageCommand(sessionID, sessionID, messageCommand, CancellationToken.None);
             }
             catch { }
