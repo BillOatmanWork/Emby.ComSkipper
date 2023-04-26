@@ -1,9 +1,11 @@
 ﻿using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
+using MediaBrowser.Controller.Persistence;
 using MediaBrowser.Controller.Plugins;
 using MediaBrowser.Controller.Session;
 using MediaBrowser.Model.Dto;
+using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Querying;
 using MediaBrowser.Model.Session;
@@ -29,13 +31,19 @@ namespace ComSkipper
 
         private ILogger Log { get; set; }
 
+        private IItemRepository ItemRepository { get; set; }
+
+        private ILibraryManager LibraryManager { get; }
+
         private string Locale = string.Empty;
 
-        public ServerEntryPoint(ISessionManager sessionManager, IUserManager userManager, ILogManager logManager, IServerConfigurationManager configManager)
+        public ServerEntryPoint(ISessionManager sessionManager, IUserManager userManager, ILogManager logManager, IServerConfigurationManager configManager, IItemRepository itemRepo, ILibraryManager libraryManager)
         {
             SessionManager = sessionManager;
             UserManager = userManager;
             ConfigManager = configManager;
+            ItemRepository = itemRepo;
+            LibraryManager = libraryManager;
             Log = logManager.GetLogger(Plugin.Instance.Name);
         }
 
@@ -85,7 +93,11 @@ namespace ComSkipper
             
             AddTimestamp(session);
 
-            ReadEdlFile(e);
+            if(ReadEdlFile(e) == false)
+            {
+                Log.Debug("No usable EDL file found.  Looking for chapter commercial points.");
+                ReadChapters(e);
+            }
         }
 
         /// <summary>
@@ -169,7 +181,7 @@ namespace ComSkipper
         /// Read and process the comskip EDL file
         /// </summary>
         /// <param name="e"></param>
-        private void ReadEdlFile(PlaybackProgressEventArgs e)
+        private bool ReadEdlFile(PlaybackProgressEventArgs e)
         {
             string filePath = e.MediaInfo.Path;
             string session = e.Session.Id;
@@ -183,7 +195,7 @@ namespace ComSkipper
             if (!File.Exists(edlFile))
             {
                 Log.Debug($"Comskip EDL file [{edlFile}] does not exist.");
-                return;
+                return false;
             }
 
             // Remove any stragglers
@@ -224,7 +236,7 @@ namespace ComSkipper
             catch (Exception ex)
             {
                 Log.Error("Could not parse EDL file " + edlFile + ". Exception: " + ex.Message);
-                return;
+                return false;
             }
 
             lock (commercialList)
@@ -237,13 +249,73 @@ namespace ComSkipper
             {
                 Log.Debug("Start: " + (s.startTicks / TimeSpan.TicksPerSecond).ToString() + "  End: " + (s.endTicks / TimeSpan.TicksPerSecond).ToString());
             }
+
+            return true;
         }
 
         /// <summary>
-        /// Remove a session from various lists
+        /// Get commercial times out of the chapters
         /// </summary>
-        /// <param name="sessionID"></param>
-        private void RemoveFromList(string sessionID)
+        /// <param name="e"></param>
+        private void ReadChapters(PlaybackProgressEventArgs e)
+        {
+            string filePath = e.MediaInfo.Path;
+            string session = e.Session.Id;
+
+            Log.Debug($"Chapters ... Media File: {filePath}");
+
+            long id = e.Item.InternalId;
+            var item = LibraryManager.GetItemById(id);
+            List<ChapterInfo> getChapters = ItemRepository.GetChapters(item);
+
+            foreach (ChapterInfo chapter in getChapters)
+            {
+                Log.Debug($"Name: {chapter.Name} StartPositionTicks = {chapter.StartPositionTicks.ToString()}");
+            }
+
+            List<EdlSequence> commTempList = new List<EdlSequence>();
+
+            // Remove any stragglers
+            lock (commercialList)
+            {
+                commercialList.RemoveAll(x => x.sessionId == session);
+            }
+
+            int chapterNumber = 0;
+            foreach (ChapterInfo chapter in getChapters)
+            {
+                chapterNumber++;
+
+                if(chapter.Name.ToLower() == "advertisement" && chapterNumber < getChapters.Count)
+                {
+                    EdlSequence seq = new EdlSequence();
+                    seq.sessionId = session;
+                    seq.startTicks = chapter.StartPositionTicks;
+                    if (seq.startTicks < TimeSpan.TicksPerSecond)
+                        seq.startTicks = TimeSpan.TicksPerSecond;
+                    seq.endTicks = getChapters[chapterNumber].StartPositionTicks;
+
+                    commTempList.Add(seq);
+                }
+            }
+
+            lock (commercialList)
+            {
+                commercialList.AddRange(commTempList);
+            }
+
+            Log.Debug("Commercial List (from chapters) in seconds for " + e.MediaInfo.Name + ":");
+            foreach (EdlSequence s in commTempList)
+            {
+                Log.Debug("Start: " + (s.startTicks / TimeSpan.TicksPerSecond).ToString() + "  End: " + (s.endTicks / TimeSpan.TicksPerSecond).ToString());
+            }
+        }
+
+            /// <summary>
+            /// Remove a session from various lists
+            /// </summary>
+            /// <param name="sessionID"></param>
+            private void RemoveFromList(string sessionID)
         {
             if (Plugin.Instance.Configuration.RealTimeEnabled == true)
             {
