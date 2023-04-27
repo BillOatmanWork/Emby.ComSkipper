@@ -37,6 +37,8 @@ namespace ComSkipper
 
         private string Locale = string.Empty;
 
+        private bool usingChapters = false;
+
         public ServerEntryPoint(ISessionManager sessionManager, IUserManager userManager, ILogManager logManager, IServerConfigurationManager configManager, IItemRepository itemRepo, ILibraryManager libraryManager)
         {
             SessionManager = sessionManager;
@@ -93,10 +95,12 @@ namespace ComSkipper
             
             AddTimestamp(session);
 
-            if(ReadEdlFile(e) == false)
+            usingChapters = false;
+
+            if (ReadEdlFile(e) == false)
             {
                 Log.Debug("No usable EDL file found.  Looking for chapter commercial points.");
-                ReadChapters(e);
+                usingChapters = ReadChapters(e);
             }
         }
 
@@ -116,7 +120,7 @@ namespace ComSkipper
             string session = e.Session.Id;
 
             // This should allow for people who are watching as it is being recorded to skip commercials
-            if (e.Item.IsActiveRecording() == true && Plugin.Instance.Configuration.RealTimeEnabled == true)
+            if (usingChapters == false && e.Item.IsActiveRecording() == true && Plugin.Instance.Configuration.RealTimeEnabled == true)
             {
                 // Reload EDL info every minute
                 long ns = DateTimeOffset.Now.ToUnixTimeSeconds();
@@ -257,7 +261,7 @@ namespace ComSkipper
         /// Get commercial times out of the chapters
         /// </summary>
         /// <param name="e"></param>
-        private void ReadChapters(PlaybackProgressEventArgs e)
+        private bool ReadChapters(PlaybackProgressEventArgs e)
         {
             string filePath = e.MediaInfo.Path;
             string session = e.Session.Id;
@@ -266,9 +270,15 @@ namespace ComSkipper
 
             long id = e.Item.InternalId;
             var item = LibraryManager.GetItemById(id);
-            List<ChapterInfo> getChapters = ItemRepository.GetChapters(item);
+            List<ChapterInfo> chapters = ItemRepository.GetChapters(item);
 
-            foreach (ChapterInfo chapter in getChapters)
+            if (chapters.Count == 0) 
+            {
+                Log.Debug("No chapters found.");
+                return false;
+            }
+
+            foreach (ChapterInfo chapter in chapters)
             {
                 Log.Debug($"Name: {chapter.Name} StartPositionTicks = {chapter.StartPositionTicks.ToString()}");
             }
@@ -282,21 +292,27 @@ namespace ComSkipper
             }
 
             int chapterNumber = 0;
-            foreach (ChapterInfo chapter in getChapters)
+            foreach (ChapterInfo chapter in chapters)
             {
                 chapterNumber++;
 
-                if(chapter.Name.ToLower() == "advertisement" && chapterNumber < getChapters.Count)
+                if(chapter.Name.ToLower() == "advertisement" && chapterNumber < chapters.Count)
                 {
                     EdlSequence seq = new EdlSequence();
                     seq.sessionId = session;
                     seq.startTicks = chapter.StartPositionTicks;
                     if (seq.startTicks < TimeSpan.TicksPerSecond)
                         seq.startTicks = TimeSpan.TicksPerSecond;
-                    seq.endTicks = getChapters[chapterNumber].StartPositionTicks;
+                    seq.endTicks = chapters[chapterNumber].StartPositionTicks;
 
                     commTempList.Add(seq);
                 }
+            }
+
+            if (commTempList.Count == 0)
+            {
+                Log.Debug("No chapters that are advertisements found.");
+                return false;
             }
 
             lock (commercialList)
@@ -309,6 +325,8 @@ namespace ComSkipper
             {
                 Log.Debug("Start: " + (s.startTicks / TimeSpan.TicksPerSecond).ToString() + "  End: " + (s.endTicks / TimeSpan.TicksPerSecond).ToString());
             }
+
+            return true;
         }
 
             /// <summary>
