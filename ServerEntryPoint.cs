@@ -84,6 +84,12 @@ namespace ComSkipper
                 return;
             }
 
+            if (string.IsNullOrEmpty(e.MediaInfo.Path))
+            {
+                Log.Debug("PlaybackStart: No MediaInfo.Path. Nothing to process.");
+                return;
+            }
+
             string filePath = e.MediaInfo.Path;
             string session = e.Session.Id;
             Log.Debug("Playback Session = " + session + " Path = " + filePath);
