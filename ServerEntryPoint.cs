@@ -59,9 +59,6 @@ namespace ComSkipper
 
         public void Run()
         {
-            // Set for correct parsing of the EDL file regardless of servers culture
-            CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
-
             // TODO: When Emby adds clients locale to the Session object, use that instead of the servers locale below.
             Locale = ConfigManager.Configuration.UICulture;
             Log.Debug("Locale = " + Locale);
@@ -233,10 +230,10 @@ namespace ComSkipper
                         {
                             EdlSequence seq = new EdlSequence();
                             seq.sessionId = session;
-                            seq.startTicks = (long)(double.Parse(parts[0]) * (double)TimeSpan.TicksPerSecond);
+                            seq.startTicks = (long)(double.Parse(parts[0], CultureInfo.GetCultureInfo("en-US")) * (double)TimeSpan.TicksPerSecond);
                             if (seq.startTicks < TimeSpan.TicksPerSecond)
                                 seq.startTicks = TimeSpan.TicksPerSecond;
-                            seq.endTicks = (long)(double.Parse(parts[1]) * (double)TimeSpan.TicksPerSecond);
+                            seq.endTicks = (long)(double.Parse(parts[1], CultureInfo.GetCultureInfo("en-US")) * (double)TimeSpan.TicksPerSecond);
 
                             commTempList.Add(seq);
                         }
