@@ -1,12 +1,15 @@
-﻿using System;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
+using System;
 using System.Collections.Generic;
 using System.IO;
+using ComSkipper.Configuration;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Drawing;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
-using ComSkipper.Configuration;
 
 namespace ComSkipper
 {
@@ -19,14 +22,12 @@ namespace ComSkipper
 
         public override string Name => "Com Skipper";
 
-
         public override string Description => "Commercial Skipper for Emby";
-
 
         public static Plugin Instance { get; private set; }
 
         private Guid _id = new Guid("1024CC72-802F-4EFB-89FB-F190AFF2A42E");
-                                      
+
         public override Guid Id => _id;
 
         public Stream GetThumbImage()

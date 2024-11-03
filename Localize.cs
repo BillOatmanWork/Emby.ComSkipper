@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
+using System.Collections.Generic;
 
 namespace ComSkipper
 {
@@ -7,8 +10,8 @@ namespace ComSkipper
     public static class Localize
     {
         #region Localization Data
-        private static List<localEntry> localizationList = new List<localEntry>()
-        { 
+        private static readonly List<localEntry> localizationList = new List<localEntry>()
+        {
             new localEntry() { text = "commercial skipped", locale = "en-us", localizedText = "Commercial Skipped" },
             new localEntry() { text = "commercial skipped", locale = "en-gb", localizedText = "Advert Skipped" },
             new localEntry() { text = "commercial skipped", locale = "es-es", localizedText = "Comercial Salteado" },
@@ -39,7 +42,7 @@ namespace ComSkipper
             if (found == null)
                 return str;
 
-            return found.localizedText;          
+            return found.localizedText;
         }
     }
 

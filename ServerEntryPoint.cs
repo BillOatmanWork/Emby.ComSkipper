@@ -1,27 +1,28 @@
-﻿using MediaBrowser.Controller.Configuration;
-using MediaBrowser.Controller.Entities;
-using MediaBrowser.Controller.Library;
-using MediaBrowser.Controller.Persistence;
-using MediaBrowser.Controller.Plugins;
-using MediaBrowser.Controller.Session;
-using MediaBrowser.Model.Dto;
-using MediaBrowser.Model.Entities;
-using MediaBrowser.Model.Logging;
-using MediaBrowser.Model.Querying;
-using MediaBrowser.Model.Session;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using MediaBrowser.Controller.Configuration;
+using MediaBrowser.Controller.Library;
+using MediaBrowser.Controller.Persistence;
+using MediaBrowser.Controller.Plugins;
+using MediaBrowser.Controller.Session;
+using MediaBrowser.Model.Entities;
+using MediaBrowser.Model.Logging;
+using MediaBrowser.Model.Querying;
+using MediaBrowser.Model.Session;
 
 namespace ComSkipper
 {
     public class ServerEntryPoint : IServerEntryPoint
     {
-        private List<EdlSequence> commercialList = new List<EdlSequence>();
-        private List<EdlTimestamp> timestamps = new List<EdlTimestamp>();
+        private readonly List<EdlSequence> commercialList = new List<EdlSequence>();
+        private readonly List<EdlTimestamp> timestamps = new List<EdlTimestamp>();
 
         private ISessionManager SessionManager { get; set; }
 
@@ -48,7 +49,6 @@ namespace ComSkipper
             LibraryManager = libraryManager;
             Log = logManager.GetLogger(Plugin.Instance.Name);
         }
-
 
         public void Dispose()
         {
@@ -95,7 +95,7 @@ namespace ComSkipper
 
             // Remove any stragglers
             RemoveFromList(session);
-            
+
             AddTimestamp(session);
 
             usingChapters = false;
@@ -128,20 +128,20 @@ namespace ComSkipper
                 // Reload EDL info every minute
                 long ns = DateTimeOffset.Now.ToUnixTimeSeconds();
                 EdlTimestamp tsfound = timestamps.Find(x => x.sessionId == session);
-                if(tsfound != null)
+                if (tsfound != null)
                 {
                     if ((ns - tsfound.timeLoaded) >= 60)
                     {
                         RemoveFromList(session);
                         Log.Debug("Reloading EDL data for Session " + tsfound.sessionId);
-                     
+
                         ReadEdlFile(e);
 
                         AddTimestamp(session);
                     }
                 }
             }
-          
+
             long playbackPositionTicks = e.PlaybackPositionTicks.Value;
 
             EdlSequence found = commercialList.Find(x => x.sessionId == session && x.skipped == false && playbackPositionTicks >= x.startTicks && playbackPositionTicks < (x.endTicks - 1000));
@@ -151,7 +151,7 @@ namespace ComSkipper
                     ? e.Session.Id
                     : SessionManager.Sessions.Where(i => i.DeviceId == e.Session.DeviceId && i.SupportsRemoteControl).FirstOrDefault().Id;
 
-                if(string.IsNullOrEmpty(controlSession))
+                if (string.IsNullOrEmpty(controlSession))
                 {
                     Log.Debug($"No control session for SessionID {e.Session.Id}");
                     return;
@@ -198,7 +198,7 @@ namespace ComSkipper
 
             // Check for edl file and load skip list if found
             // Seconds to ticks = seconds * TimeSpan.TicksPerSecond
-            
+
             if (!File.Exists(edlFile))
             {
                 Log.Debug($"Comskip EDL file [{edlFile}] does not exist.");
@@ -275,7 +275,7 @@ namespace ComSkipper
             var item = LibraryManager.GetItemById(id);
             List<ChapterInfo> chapters = ItemRepository.GetChapters(item);
 
-            if (chapters.Count == 0) 
+            if (chapters.Count == 0)
             {
                 Log.Debug("No chapters found.");
                 return false;
@@ -299,7 +299,7 @@ namespace ComSkipper
             {
                 chapterNumber++;
 
-                if(chapter.Name.ToLower() == "advertisement" && chapterNumber < chapters.Count)
+                if (chapter.Name.ToLower() == "advertisement" && chapterNumber < chapters.Count)
                 {
                     EdlSequence seq = new EdlSequence();
                     seq.sessionId = session;
@@ -332,11 +332,11 @@ namespace ComSkipper
             return true;
         }
 
-            /// <summary>
-            /// Remove a session from various lists
-            /// </summary>
-            /// <param name="sessionID"></param>
-            private void RemoveFromList(string sessionID)
+        /// <summary>
+        /// Remove a session from various lists
+        /// </summary>
+        /// <param name="sessionID"></param>
+        private void RemoveFromList(string sessionID)
         {
             if (Plugin.Instance.Configuration.RealTimeEnabled == true)
             {
@@ -384,7 +384,7 @@ namespace ComSkipper
 
             UserQuery userListQuery = new UserQuery();
             userListQuery.IsAdministrator = true;
-            playstateRequest.ControllingUserId =  this.UserManager.GetUserList(userListQuery).FirstOrDefault().Id.ToString();
+            playstateRequest.ControllingUserId = this.UserManager.GetUserList(userListQuery).FirstOrDefault().Id.ToString();
             playstateRequest.SeekPositionTicks = new long?(seek);
             SessionManager.SendPlaystateCommand((string)null, sessionID, playstateRequest, CancellationToken.None);
         }
